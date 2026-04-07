@@ -1,0 +1,26 @@
+* text=auto
+
+# Unity YAML files
+*.unity text
+*.prefab text
+*.asset text
+*.meta text
+*.anim text
+*.controller text
+
+# Scripts
+*.cs text
+
+# Images
+*.png binary
+*.jpg binary
+*.jpeg binary
+
+# Audio
+*.mp3 binary
+*.wav binary
+*.ogg binary
+
+# Models
+*.fbx binary
+*.blend binary
