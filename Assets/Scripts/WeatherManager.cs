@@ -1,30 +1,39 @@
+using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 
 public class WeatherManager : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private TextMeshProUGUI currentWeatherText;
-    [SerializeField] private TextMeshProUGUI prevWeatherText;
-    [SerializeField] private TextMeshProUGUI temperatureText;
-    [SerializeField] private TextMeshProUGUI humidityText;
-    [SerializeField] private TextMeshProUGUI timerText;
+    [System.Serializable]
+    public class WeatherState
+    {
+        public string name;
+        public float minTemp;
+        public float maxTemp;
+        public float minHumidity;
+        public float maxHumidity;
 
-    [Header("State Settings")]
-    public string[] states = { "Sunny", "Cloudy", "Rainy", "Snowy", "Foggy", "Stormy" };
-    public string currentState = "Cloudy";
-    public string prevState = "None";
-    public int currentIndex = 1;
+        public WeatherState(string n, float minT, float maxT, float minH, float maxH)
+        {
+            name = n;
+            minTemp = minT;
+            maxTemp = maxT;
+            minHumidity = minH;
+            maxHumidity = maxH;
+        }
+    }
 
-    [Header("Environment Variables")]
+    [Header("Simulation Data")]
+    public List<WeatherState> weatherStates = new List<WeatherState>();
+    public int currentIndex = 1; // Default weather Cloudy
+    public int nextStateIndex = -1; // Show Next State
     public float temperature = 25f;
     public float humidity = 50f;
-    public float timer = 30.0f;
-    public float countdownTimer = 30.0f;
+    public float countdownTimer = 30f;
 
-    // Adjusted Matrix: Boosted Cloudy -> Rainy (0.30) to help exit the Sunny loop
-    private float[][] transitionMatrix = new float[][]
+    private float timer;
+
+    private readonly float[][] transitionMatrix =
     {
         new float[] { 0.55f, 0.30f, 0.08f, 0.01f, 0.03f, 0.03f }, // Sunny
         new float[] { 0.25f, 0.35f, 0.30f, 0.02f, 0.05f, 0.03f }, // Cloudy
@@ -34,112 +43,145 @@ public class WeatherManager : MonoBehaviour
         new float[] { 0.05f, 0.15f, 0.45f, 0.05f, 0.10f, 0.20f }  // Stormy
     };
 
-    void Update()
+    public WeatherState CurrentState => weatherStates[currentIndex];
+    public WeatherState NextState => nextStateIndex >= 0 && nextStateIndex < weatherStates.Count ? 
+        weatherStates[nextStateIndex] : null;
+    public float RemainingTime => timer;
+
+    private void Start()
+    {
+        if (weatherStates.Count == 0)
+        {
+            // Set the min and max temp and humidity for each state, add into list
+            weatherStates.Add(new WeatherState("Sunny", 20, 35, 10, 40));
+            weatherStates.Add(new WeatherState("Cloudy", 15, 25, 30, 60));
+            weatherStates.Add(new WeatherState("Rainy", 5, 20, 70, 95));
+            weatherStates.Add(new WeatherState("Snowy", -15, 0, 40, 80));
+            weatherStates.Add(new WeatherState("Foggy", 0, 15, 80, 100));
+            weatherStates.Add(new WeatherState("Stormy", 10, 25, 85, 100));
+        }
+
+        currentIndex = Mathf.Clamp(currentIndex, 0, weatherStates.Count - 1);
+        timer = countdownTimer;
+        nextStateIndex = CalculateNextState();
+    }
+
+    private void Update()
     {
         UpdateEnvironment(Time.deltaTime);
 
         timer -= Time.deltaTime;
-        if (timer <= 0)
+        if (timer <= 0f)
         {
-            WeatherTransition();
+            ApplyNextState();
             timer = countdownTimer;
+            nextStateIndex = CalculateNextState();
         }
-
-        UpdateUI();
     }
 
-    void UpdateUI()
+    public void UpdateCurrentStateRanges(float minTemp, float maxTemp, float minHumidity, float maxHumidity)
     {
-        if (currentWeatherText != null) currentWeatherText.text = "Current: " + currentState;
-        if (prevWeatherText != null) prevWeatherText.text = "Previous: " + prevState;
+        WeatherState current = weatherStates[currentIndex];
+        current.minTemp = minTemp;
+        current.maxTemp = maxTemp;
+        current.minHumidity = minHumidity;
+        current.maxHumidity = maxHumidity;
 
-        temperatureText.text = "Temp: " + temperature.ToString("f1") + "°C";
-        humidityText.text = "Humidity: " + humidity.ToString("f1") + "%";
-
-        if (timerText != null)
-            timerText.text = "Next Shift: " + Mathf.CeilToInt(timer) + "s";
+        Debug.Log($"Rules updated for {current.name}");
     }
 
-    void UpdateEnvironment(float deltaTime)
+    private void UpdateEnvironment(float deltaTime)
     {
-        // 1. Procedural Drift
+        WeatherState current = weatherStates[currentIndex];
+
         temperature += Random.Range(-0.05f, 0.05f);
         humidity += Random.Range(-0.1f, 0.1f);
 
-        // 2. Weather Feedback
-        if (currentState == "Sunny") { temperature += 0.01f; humidity -= 0.02f; }
-        else if (currentState == "Rainy") { temperature -= 0.01f; humidity += 0.05f; }
-        else if (currentState == "Snowy") { temperature -= 0.03f; }
+        if (temperature < current.minTemp) temperature += 0.01f;
+        if (temperature > current.maxTemp) temperature -= 0.01f;
 
-        // 3. Natural Recovery: Pulls temp back toward 20°C so it doesn't stay frozen forever
-        float baseTemp = 20.0f;
-        float recoverySpeed = 0.005f;
-        temperature = Mathf.MoveTowards(temperature, baseTemp, recoverySpeed);
+        if (humidity < current.minHumidity) humidity += 0.02f;
+        if (humidity > current.maxHumidity) humidity -= 0.02f;
 
-        temperature = Mathf.Clamp(temperature, -15f, 35f);
-        humidity = Mathf.Clamp(humidity, 10f, 90f);
+        temperature = Mathf.Clamp(temperature, -30f, 50f);
+        humidity = Mathf.Clamp(humidity, 0f, 100f);
     }
 
-    void WeatherTransition()
+    private int CalculateNextState()
     {
         float[] probability = (float[])transitionMatrix[currentIndex].Clone();
 
-        // Apply Temperature Logic
+        if (temperature < 0f)
+        {
+            probability[3] += probability[2];
+            probability[2] *= 0.1f;
+        }
+        
         if (temperature > 30f)
         {
-            probability[0] += 0.2f;
-            probability[3] = 0.0f;
+            probability[0] += 0.2f; // Sunny
         }
-        else if (temperature < 0f)
+
+        if (humidity > 80f)
         {
-            if (probability[3] < 0.3f) probability[3] = 0.3f; // Stronger Snow floor
-            probability[3] += probability[2];
-            probability[2] *= 0.1f; // Don't kill it entirely, just make it rare
-
-            // LOGIC GUARD: Prevent direct jump from Snow to Sun when freezing
-            probability[0] *= 0.1f;
+            probability[2] += 0.2f; // Rainy
+            probability[5] += 0.1f; // Stormy
         }
 
-        // Apply Humidity Logic
-        if (humidity > 70f) { probability[2] += 0.2f; probability[5] += 0.05f; } // Boost Storms too!
-        else if (humidity < 25f) { probability[0] += 0.15f; }
+        if (humidity < 30f)
+        {
+            probability[2] *= 0.5f;
+        }
 
         probability = NormalizeProbability(probability);
 
         float randomNum = Random.value;
-        float cumulative = 0.0f;
+        float cumulative = 0f;
 
         for (int i = 0; i < probability.Length; i++)
         {
             cumulative += probability[i];
             if (randomNum <= cumulative)
             {
-                // Only update if the state is DIFFERENT
-                if (states[i] != currentState)
-                {
-                    prevState = currentState; // Handover
-                    currentState = states[i];
-                    currentIndex = i;
-
-                    Debug.Log("Weather Changed: " + prevState + " -> " + currentState);
-
-                    // Call Person C's script here:
-                    // visualsController.TransitionTo(currentState);
-                }
-                else
-                {
-                    Debug.Log("Weather Stayed: " + currentState);
-                }
-                break;
+                return i;
             }
         }
+
+        return currentIndex;
     }
 
-    float[] NormalizeProbability(float[] prob)
+    private void ApplyNextState()
+    {
+        if (nextStateIndex < 0 || nextStateIndex >= weatherStates.Count)
+            return;
+
+        currentIndex = nextStateIndex;
+        Debug.Log("Weather Changed to: " + weatherStates[currentIndex].name);
+    }
+
+    private float[] NormalizeProbability(float[] prob)
     {
         float totalSum = prob.Sum();
-        if (totalSum <= 0) return Enumerable.Repeat(1.0f / prob.Length, prob.Length).ToArray();
-        for (int i = 0; i < prob.Length; i++) prob[i] /= totalSum;
+
+        if (totalSum <= 0f)
+        {
+            return Enumerable.Repeat(1f / prob.Length, prob.Length).ToArray();
+        }
+
+        for (int i = 0; i < prob.Length; i++)
+        {
+            prob[i] /= totalSum;
+        }
+
         return prob;
+    }
+
+    public void SetNextState(int newIndex)
+    {
+        if (newIndex < 0 || newIndex >= weatherStates.Count)
+            return;
+
+        nextStateIndex = newIndex;
+        Debug.Log("Next weather set to: " + weatherStates[nextStateIndex].name);
     }
 }
