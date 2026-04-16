@@ -104,3 +104,7 @@ InitTestScene*.unity*
 
 # Ignore PlasticSCM folder
 .plastic
+
+Assets/_Recovery/
+
+Assets/_Recovery.meta
