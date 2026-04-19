@@ -115,7 +115,7 @@ Material:
     - _RimValue: 0.1
     - _Smoothness: 0.59999996
     - _SmoothnessTextureChannel: 0
-    - _SnowBalance: 0.5
+    - _SnowBalance: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
