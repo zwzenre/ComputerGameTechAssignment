@@ -4,6 +4,7 @@ public class SunnyVisualController : BaseWeatherController
 {
     [SerializeField] private Material heatHazeMaterial;
     [SerializeField] private float activeHaze = 0.005f;
+    [SerializeField] private float inactiveHaze = 0f;
     [SerializeField] private float transitionSpeed = 0.0025f;
 
     private float currentHaze;
@@ -18,6 +19,26 @@ public class SunnyVisualController : BaseWeatherController
         {
             currentHaze = Mathf.MoveTowards(currentHaze, target, transitionSpeed * Time.deltaTime);
             if (heatHazeMaterial != null) heatHazeMaterial.SetFloat(HazePropID, currentHaze);
+        }
+    }
+
+    private void OnDisable()
+    {
+        ResetHeatDistortion();
+    }
+
+    private void OnApplicationQuit()
+    {
+        ResetHeatDistortion();
+    }
+
+    private void ResetHeatDistortion()
+    {
+        currentHaze = inactiveHaze;
+
+        if (heatHazeMaterial != null)
+        {
+            heatHazeMaterial.SetFloat(HazePropID, inactiveHaze);
         }
     }
 }
