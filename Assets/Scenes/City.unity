@@ -17469,6 +17469,7 @@ GameObject:
   - component: {fileID: 890823650}
   - component: {fileID: 890823649}
   - component: {fileID: 890823652}
+  - component: {fileID: 890823653}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -17594,6 +17595,27 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!114 &890823653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890823648}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d9c77006c49369438b6dcec854c398c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MainCameraController
+  moveSpeed: 8
+  fastMoveMultiplier: 2
+  verticalMoveSpeed: 6
+  scrollSpeedStep: 2
+  minMoveSpeed: 2
+  maxMoveSpeed: 25
+  lookSensitivity: 2
+  minPitch: -80
+  maxPitch: 80
 --- !u!1 &914834958
 GameObject:
   m_ObjectHideFlags: 0
@@ -23666,7 +23688,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_BoundingSphereOverride: {x: 9.404241e-38, y: 1.101147e-19, z: 7.1063e-41, w: 3.2264192e+9}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
@@ -29453,7 +29475,7 @@ Transform:
   m_GameObject: {fileID: 1452206427}
   serializedVersion: 2
   m_LocalRotation: {x: -0.64258105, y: 0.22714154, z: -0.011106822, w: 0.7316919}
-  m_LocalPosition: {x: -24.57038, y: 49.8, z: 22.423649}
+  m_LocalPosition: {x: -8.04, y: 50, z: 15.8}
   m_LocalScale: {x: 50.766884, y: 50.76688, z: 50.766872}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -29767,6 +29789,7 @@ MonoBehaviour:
   primaryParticles: {fileID: 0}
   heatHazeMaterial: {fileID: 2100000, guid: 01c29a99598c81b42baa0e319bc0192c, type: 2}
   activeHaze: 0.005
+  inactiveHaze: 0
   transitionSpeed: 0.0025
 --- !u!1 &1627660674
 GameObject:
@@ -30261,7 +30284,7 @@ Transform:
   m_GameObject: {fileID: 1899941217}
   serializedVersion: 2
   m_LocalRotation: {x: -0.6508865, y: 0.1318874, z: -0.0034939456, w: 0.7476231}
-  m_LocalPosition: {x: -0.810379, y: 47.371727, z: 21.863651}
+  m_LocalPosition: {x: -24.6, y: 47.371727, z: 8.2}
   m_LocalScale: {x: 25.58675, y: 25.586739, z: 25.586752}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -31150,7 +31173,7 @@ Transform:
   m_GameObject: {fileID: 2068093635}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: -1.4}
+  m_LocalPosition: {x: 0, y: -0, z: -9.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
