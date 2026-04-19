@@ -17,9 +17,33 @@ public class SnowVisualController : BaseWeatherController
         if (!Mathf.Approximately(currentSnow, target))
         {
             currentSnow = Mathf.MoveTowards(currentSnow, target, changeSpeed * Time.deltaTime);
-            foreach (var mat in snowMaterials)
+            ApplySnow(currentSnow);
+        }
+    }
+
+    private void OnDisable()
+    {
+        ResetSnow();
+    }
+
+    private void OnApplicationQuit()
+    {
+        ResetSnow();
+    }
+
+    private void ResetSnow()
+    {
+        currentSnow = 0f;
+        ApplySnow(0f);
+    }
+
+    private void ApplySnow(float value)
+    {
+        foreach (var mat in snowMaterials)
+        {
+            if (mat != null)
             {
-                if (mat != null) mat.SetFloat(SnowPropID, currentSnow);
+                mat.SetFloat(SnowPropID, value);
             }
         }
     }

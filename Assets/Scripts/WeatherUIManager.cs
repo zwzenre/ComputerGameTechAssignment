@@ -135,7 +135,41 @@ public class WeatherUIManager : MonoBehaviour
         if (float.TryParse(maxHumidInput.text, out float parsedMaxHumidity))
             maxHumidity = parsedMaxHumidity;
 
+        // Validation
+        minTemp = Mathf.Clamp(minTemp, -15f, 35f);
+        maxTemp = Mathf.Clamp(maxTemp, -15f, 35f);
+
+        if (maxTemp < minTemp + 5f)
+        {
+            if (minTemp + 5f <= 35f)
+            {
+                maxTemp = minTemp + 5f;
+            }
+            else
+            {
+                minTemp = 30f;
+                maxTemp = 35f;
+            }
+        }
+
+        minHumidity = Mathf.Clamp(minHumidity, 0f, 100f);
+        maxHumidity = Mathf.Clamp(maxHumidity, 0f, 100f);
+
+        if (maxHumidity < minHumidity + 10f)
+        {
+            if (minHumidity + 10f <= 100f)
+            {
+                maxHumidity = minHumidity + 10f;
+            }
+            else
+            {
+                minHumidity = 90f;
+                maxHumidity = 100f;
+            }
+        }
+
         weatherManager.UpdateCurrentStateRanges(minTemp, maxTemp, minHumidity, maxHumidity);
         SyncUIWithCurrentState();
     }
+
 }
