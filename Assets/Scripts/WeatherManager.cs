@@ -4,17 +4,19 @@ using UnityEngine;
 
 public class WeatherManager : MonoBehaviour
 {
+    public enum WeatherType { Sunny, Cloudy, Rainy, Snowy, Foggy, Stormy }
+
     [System.Serializable]
     public class WeatherState
     {
+        public WeatherType type;
         public string name;
-        public float minTemp;
-        public float maxTemp;
-        public float minHumidity;
-        public float maxHumidity;
+        public float minTemp, maxTemp, minHumidity, maxHumidity;
+        public BaseWeatherController visualController;
 
-        public WeatherState(string n, float minT, float maxT, float minH, float maxH)
+        public WeatherState(WeatherType t, string n, float minT, float maxT, float minH, float maxH)
         {
+            type = t;
             name = n;
             minTemp = minT;
             maxTemp = maxT;
@@ -50,21 +52,25 @@ public class WeatherManager : MonoBehaviour
 
     private void Start()
     {
-        if (weatherStates.Count == 0)
-        {
-            // Set the min and max temp and humidity for each state, add into list
-            weatherStates.Add(new WeatherState("Sunny", 20, 35, 10, 40));
-            weatherStates.Add(new WeatherState("Cloudy", 15, 25, 30, 60));
-            weatherStates.Add(new WeatherState("Rainy", 5, 20, 70, 95));
-            weatherStates.Add(new WeatherState("Snowy", -15, 0, 40, 80));
-            weatherStates.Add(new WeatherState("Foggy", 0, 15, 80, 100));
-            weatherStates.Add(new WeatherState("Stormy", 10, 25, 85, 100));
-        }
-
         currentIndex = Mathf.Clamp(currentIndex, 0, weatherStates.Count - 1);
         timer = countdownTimer;
         nextStateIndex = CalculateNextState();
+
+        UpdateVisuals();
     }
+
+    //private void InitializeStates()
+    //{
+    //    if (weatherStates.Count == 0)
+    //    {
+    //        weatherStates.Add(new WeatherState(WeatherType.Sunny, "Sunny", 20, 35, 10, 40));
+    //        weatherStates.Add(new WeatherState(WeatherType.Cloudy, "Cloudy", 15, 25, 30, 60));
+    //        weatherStates.Add(new WeatherState(WeatherType.Rainy, "Rainy", 5, 20, 70, 95));
+    //        weatherStates.Add(new WeatherState(WeatherType.Snowy, "Snowy", -15, 0, 40, 80));
+    //        weatherStates.Add(new WeatherState(WeatherType.Foggy, "Foggy", 0, 15, 80, 100));
+    //        weatherStates.Add(new WeatherState(WeatherType.Stormy, "Stormy", 10, 25, 85, 100));
+    //    }
+    //}
 
     private void Update()
     {
@@ -77,6 +83,8 @@ public class WeatherManager : MonoBehaviour
             timer = countdownTimer;
             nextStateIndex = CalculateNextState();
         }
+
+        UpdateVisuals();
     }
 
     public void UpdateCurrentStateRanges(float minTemp, float maxTemp, float minHumidity, float maxHumidity)
@@ -157,6 +165,18 @@ public class WeatherManager : MonoBehaviour
 
         currentIndex = nextStateIndex;
         Debug.Log("Weather Changed to: " + weatherStates[currentIndex].name);
+    }
+
+    private void UpdateVisuals()
+    {
+        for (int i = 0; i < weatherStates.Count; i++)
+        {
+            if (weatherStates[i].visualController != null)
+            {
+                // Direct call is much faster than SendMessage or strings
+                weatherStates[i].visualController.SetActive(i == currentIndex);
+            }
+        }
     }
 
     private float[] NormalizeProbability(float[] prob)

@@ -1,77 +1,25 @@
 using UnityEngine;
 
-public class SnowVisualController : MonoBehaviour
+public class SnowVisualController : BaseWeatherController
 {
-    [Header("References")]
-    [SerializeField] private WeatherManager weatherManager;
-    [SerializeField] private ParticleSystem snowParticleSystem;
+    [SerializeField] private Material[] snowMaterials;
+    [SerializeField] private float snowyTarget = 5f;
+    [SerializeField] private float changeSpeed = 0.25f;
 
-    [Header("Snow Shader")]
-    [SerializeField] private Material[] snowMaterial;
-    [SerializeField] private string snowPropertyName = "SnowBalance";
-    [SerializeField] private float snowyTargetValue = 5f;
-    [SerializeField] private float nonSnowyTargetValue = 0f;
-    [SerializeField] private float snowChangeSpeed = 0.25f;
+    private float currentSnow;
+    private static readonly int SnowPropID = Shader.PropertyToID("_SnowBalance");
 
-    private float currentSnowValue = 0f;
-
-    private void Start()
+    protected override void Update()
     {
-        if (weatherManager == null)
+        base.Update();
+
+        float target = isActive ? snowyTarget : 0f;
+        if (!Mathf.Approximately(currentSnow, target))
         {
-            Debug.LogError("SnowVisualController: WeatherManager reference is missing.");
-            enabled = false;
-            return;
-        }
-
-        bool isSnowy = weatherManager.CurrentState.name == "Snowy";
-        currentSnowValue = isSnowy ? snowyTargetValue : nonSnowyTargetValue;
-
-        ApplySnowValue(currentSnowValue);
-        UpdateSnowParticles(isSnowy);
-    }
-
-    private void Update()
-    {
-        bool isSnowy = weatherManager.CurrentState.name == "Snowy";
-        float targetSnowValue = isSnowy ? snowyTargetValue : nonSnowyTargetValue;
-
-        currentSnowValue = Mathf.MoveTowards(
-            currentSnowValue,
-            targetSnowValue,
-            snowChangeSpeed * Time.deltaTime
-        );
-
-        ApplySnowValue(currentSnowValue);
-        UpdateSnowParticles(isSnowy);
-    }
-
-    private void ApplySnowValue(float value)
-    {
-        for (int i = 0; i < snowMaterial.Length; i++)
-        {
-            if (snowMaterial[i] == null) continue;
-
-            snowMaterial[i].SetFloat(snowPropertyName, value);
-        }
-    }
-
-    private void UpdateSnowParticles(bool isSnowy)
-    {
-        if (snowParticleSystem == null) return;
-
-        if (isSnowy)
-        {
-            if (!snowParticleSystem.isPlaying)
+            currentSnow = Mathf.MoveTowards(currentSnow, target, changeSpeed * Time.deltaTime);
+            foreach (var mat in snowMaterials)
             {
-                snowParticleSystem.Play();
-            }
-        }
-        else
-        {
-            if (snowParticleSystem.isPlaying)
-            {
-                snowParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                if (mat != null) mat.SetFloat(SnowPropID, currentSnow);
             }
         }
     }
