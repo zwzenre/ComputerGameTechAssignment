@@ -9,6 +9,11 @@ public class SnowVisualController : BaseWeatherController
     private float currentSnow;
     private static readonly int SnowPropID = Shader.PropertyToID("_SnowBalance");
 
+    protected override void Start()
+    {
+        base.Start();
+        ResetSnow();
+    }
     protected override void Update()
     {
         base.Update();

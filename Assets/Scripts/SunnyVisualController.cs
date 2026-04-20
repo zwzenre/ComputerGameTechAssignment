@@ -10,6 +10,12 @@ public class SunnyVisualController : BaseWeatherController
     private float currentHaze;
     private static readonly int HazePropID = Shader.PropertyToID("_HeatDistortion");
 
+    protected override void Start()
+    {
+        base.Start();
+        ResetHeatDistortion();
+    }
+
     protected override void Update()
     {
         base.Update(); // Handle Volume
