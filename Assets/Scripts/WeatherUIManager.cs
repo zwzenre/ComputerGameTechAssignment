@@ -20,6 +20,7 @@ public class WeatherUIManager : MonoBehaviour
     [SerializeField] private TMP_InputField maxTempInput;
     [SerializeField] private TMP_InputField minHumidInput;
     [SerializeField] private TMP_InputField maxHumidInput;
+    [SerializeField] private TMP_InputField timerInput;
 
     [Header("Next State Control")]
     [SerializeField] private TMP_Dropdown nextStateDropdown;
@@ -85,6 +86,7 @@ public class WeatherUIManager : MonoBehaviour
         maxTempInput.text = current.maxTemp.ToString();
         minHumidInput.text = current.minHumidity.ToString();
         maxHumidInput.text = current.maxHumidity.ToString();
+        timerInput.text = weatherManager.countdownTimer.ToString();
 
         if (nextStateDropdown != null && weatherManager.nextStateIndex >= 0)
         {
@@ -104,6 +106,7 @@ public class WeatherUIManager : MonoBehaviour
             nextWeatherText.text = "Next State: " + weatherManager.NextState.name;
         else
             nextWeatherText.text = "Next State: -";
+        
     }
 
     public void OnNextStateDropdownChanged()
@@ -172,4 +175,14 @@ public class WeatherUIManager : MonoBehaviour
         SyncUIWithCurrentState();
     }
 
+    public void UpdateTimerFromUI()
+    {
+        if (float.TryParse(timerInput.text, out float newTime))
+        {
+            newTime = Mathf.Clamp(newTime, 1f, 120f);
+            weatherManager.countdownTimer = newTime;
+
+            Debug.Log("Timer updated to: " + newTime);
+        }
+    }
 }
